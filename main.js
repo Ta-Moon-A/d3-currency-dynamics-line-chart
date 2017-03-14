@@ -10,34 +10,29 @@ var config  = {
           top : 20,
           bottom : 70,
           left : 30,
-          right : 20,
+          right : 60,
       }
 };
 
 var lineColors = {
-    "0" : "red",
-    "1" : "green",
-    "2" : "blue",
-    "3" : "black",
-    "4" : "pink",
-    "5" : "grey",
-    "6" : "teal",
-     "7" : "orange",
+    "0" : "lightgrey",
+    "1" : "grey",
+    "2" : "red"
 };
 
 var monthNames = [
-    {n: 1, name :"January"},
-    {n: 2, name :"February"},
-    {n: 3, name :"March"},
-    {n: 4, name :"April"},
+    {n: 1, name :"Jan"},
+    {n: 2, name :"Feb"},
+    {n: 3, name :"Mar"},
+    {n: 4, name :"Apr"},
     {n: 5, name :"May"},
-    {n: 6, name :"June"},
-    {n: 7, name :"July"},
-    {n: 8, name :"August"}, 
-    {n: 9, name :"September"},
-    {n: 10, name :"October"},
-    {n: 11, name :"November"},
-    {n: 12, name :"December"}
+    {n: 6, name :"Jun"},
+    {n: 7, name :"Jul"},
+    {n: 8, name :"Aug"}, 
+    {n: 9, name :"Sep"},
+    {n: 10, name :"Oct"},
+    {n: 11, name :"Nov"},
+    {n: 12, name :"Dec"}
 ];
 
 var width = config.svgWidth - config.svgMargin.left - config.svgMargin.right;
@@ -68,15 +63,26 @@ d3.csv("currency_data.csv")
 
 
 function ProcessData(){
-    for(item of parsedData){
-        var fullYear = item.date.getFullYear() + "";
-        var year = fullYear.substring(3, 4);
-        
-        if(yearlyData[year] == undefined) {
-           yearlyData[year] = [];
-        }
-       yearlyData[year].push(item);
-   }
+
+    var nest = d3.nest()
+                 .key(function(d) { return d.date.getFullYear(); })
+                 .key(function(d) { return d.date.getMonth() +1; })
+                 .rollup(function(month) { 
+                     return {
+                               "value": d3.sum(month, function(d) {return parseFloat(d.value)})/month.length,
+                            } 
+                    })
+                 .entries(parsedData);
+
+
+    yearlyData = nest.map(function(yearData) { 
+        return yearData.values.map(function(monthData){
+            return {
+                "month" : parseInt(monthData.key),
+                "value" : monthData.values.value
+            };
+        });
+    });
 
     PaintChart();
 }
@@ -84,7 +90,7 @@ function ProcessData(){
 function PaintChart(){
 
 
-var xScale = d3.time.scale()
+var xScale = d3.scale.linear() //time.scale()
                 .domain(d3.extent(monthNames, function(d) { return d.n; }))
                 .range([0,width]);
 
@@ -97,35 +103,28 @@ var lines  = g.selectAll("path")
                    .data(yearlyData)
                    .enter()
                    .append("path")
-                        .datum(function(d,i) { return d; })
-                        .attr("fill", "none")
                         .attr("stroke", function(d,i) { return lineColors[i]; })
-                        .attr("stroke-linejoin", "square")
-                        .attr("stroke-linecap", "square")
-                        .attr("stroke-width", 1.5)
+                        .attr("class", "line")
                         .attr("d", d3.svg.line()
-                                    .x(function(d) { return xScale(d.date.getMonth()+1); })
+                                    .x(function(d) { return xScale(d.month); })
                                     .y(function(d) { return yScale(d.value); })
                              );
-
-
-
-var xAxis = d3.svg.axis()
-              .scale(xScale)
-              .orient("bottom")
-              .ticks(d3.time.months)
-              .tickFormat(d3.time.format("%B"));
 
 var yAxis = d3.svg.axis()
               .scale(yScale)
               .orient("left");
 
-              
-   g.append("g")
-            .attr("class", "axis")
+var xAxis = d3.svg.axis()
+              .scale(xScale)
+              .tickFormat(function(d) {  return monthNames[d-1].name; })
+              .orient("bottom")
+              ;
+
+ g.append("g")
+            .attr("class", "xaxis")
             .attr("transform", "translate(0," + height  + ")")
             .call(xAxis)
-             .selectAll("text")	
+             .selectAll("text")
                 .style("text-anchor", "end")
                 .attr("dx", "-.8em")
                 .attr("dy", ".15em")
@@ -139,7 +138,7 @@ var yAxis = d3.svg.axis()
 
 
     g.append("g")
-            .attr("class", "axis")
+            .attr("class", "yaxis")
             .call(yAxis)
      .append("text")
             .attr("transform", "rotate(-90)")
