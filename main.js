@@ -20,6 +20,10 @@ var lineColors = {
     "2" : "red"
 };
 
+var legendTitles = [
+   2014,2015,2016
+];
+
 var monthNames = [
     {n: 1, name :"Jan"},
     {n: 2, name :"Feb"},
@@ -147,6 +151,28 @@ var xAxis = d3.svg.axis()
             .style("text-anchor", "end")
             .text("Ccy");
 
+    var legend  = svg.append("g");
+   
+   legend.selectAll("g")
+         .data(yearlyData)
+         .enter()
+       .append("line")     
+        .style("stroke", function(d,i) { console.log(i); return lineColors[i]; }) 
+        .style("stroke-width", 3) 
+        .attr("x1", function(d,i) { return 400 + (100 * i); })  
+        .attr("y1", 20) 
+        .attr("x2", function(d,i) {  return 400 + (100 * i) + 40; }) 
+        .attr("y2", 20);
+
+ legend.selectAll("g")
+         .data(yearlyData)
+         .enter()
+       .append("text")
+        .text(function(d,i){
+                return legendTitles[i];
+         })
+        .attr("x", function(d,i) { return 400 + (100 * i) + 45; })  
+        .attr("y", 23) ;
 
 
 }
