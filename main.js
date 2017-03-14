@@ -7,7 +7,7 @@ var config  = {
       svgWidth : 800,
       svgHeight : 500,
       svgMargin : {
-          top : 20,
+          top : 40,
           bottom : 70,
           left : 30,
           right : 60,
@@ -23,7 +23,7 @@ var lineColors = {
 var legendTitles = [
    2014,2015,2016
 ];
-
+var dashed = [2,2.5];
 var monthNames = [
     {n: 1, name :"Jan"},
     {n: 2, name :"Feb"},
@@ -143,13 +143,7 @@ var xAxis = d3.svg.axis()
 
     g.append("g")
             .attr("class", "yaxis")
-            .call(yAxis)
-     .append("text")
-            .attr("transform", "rotate(-90)")
-            .attr("y", 10)
-            .attr("dy", ".71em")
-            .style("text-anchor", "end")
-            .text("Ccy");
+            .call(yAxis);
 
     var legend  = svg.append("g");
    
@@ -157,12 +151,12 @@ var xAxis = d3.svg.axis()
          .data(yearlyData)
          .enter()
        .append("line")     
-        .style("stroke", function(d,i) { console.log(i); return lineColors[i]; }) 
-        .style("stroke-width", 3) 
-        .attr("x1", function(d,i) { return 400 + (100 * i); })  
-        .attr("y1", 20) 
-        .attr("x2", function(d,i) {  return 400 + (100 * i) + 40; }) 
-        .attr("y2", 20);
+        .style("stroke", function(d,i) { return lineColors[i]; }) 
+        .style("stroke-width", 4) 
+        .attr("x1", function(d,i) { return 500 + (100 * i); })  
+        .attr("y1",config.svgMargin.top/2) 
+        .attr("x2", function(d,i) {  return 500 + (100 * i) + 30; }) 
+        .attr("y2", config.svgMargin.top/2);
 
  legend.selectAll("g")
          .data(yearlyData)
@@ -171,8 +165,34 @@ var xAxis = d3.svg.axis()
         .text(function(d,i){
                 return legendTitles[i];
          })
-        .attr("x", function(d,i) { return 400 + (100 * i) + 45; })  
-        .attr("y", 23) ;
+        .attr("x", function(d,i) { return 500 + (100 * i) + 35; })  
+        .attr("y", config.svgMargin.top/2 + 5) 
+        .attr("class","legendText");
 
+    
+    svg.append("text")
+        .text("Monthly Avg Ccy")
+        .attr("class","title")
+        .attr("x", config.svgMargin.left)  
+        .attr("y", config.svgMargin.top/2 + 5);
+
+    
+    //  .selectAll("line")
+    //  .data(dashed)
+    //  .enter()
+     g.append("line")
+     .attr("x1", 0)
+     .attr("x2", width)
+     .attr("y1", yScale(2))
+     .attr("y2", yScale(2))
+     .attr("class", "dashed");
+
+     
+     g.append("line")
+     .attr("x1", 0)
+     .attr("x2", width)
+     .attr("y1", yScale(2.5))
+     .attr("y2", yScale(2.5))
+     .attr("class", "dashed")
 
 }
