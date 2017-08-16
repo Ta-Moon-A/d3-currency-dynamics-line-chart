@@ -15,9 +15,9 @@ var config  = {
 };
 
 var lineColors = {
-    "0" : "lightgrey",
-    "1" : "grey",
-    "2" : "red"
+    "0" : "#f37736",
+    "1" : "#7bc043",
+    "2" : "#0392cf"
 };
 
 var legendTitles = [
@@ -48,7 +48,14 @@ var svg = d3.select("body")
             .attr("width", config.svgWidth)
             .attr("height", config.svgHeight);
 
- g = svg.append("g").attr("transform", "translate(" + 2*config.svgMargin.left + "," + config.svgMargin.top + ")");
+svg.append("rect")
+    .attr("width", "100%")
+    .attr("height", "100%")
+    .attr('fill' , '#fdf498');
+
+ g = svg.append("g")
+        .attr("transform", "translate(" + 2*config.svgMargin.left + "," + config.svgMargin.top + ")");
+       
 
 
 
