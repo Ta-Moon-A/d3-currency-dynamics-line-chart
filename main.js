@@ -1,4 +1,5 @@
-var parseDate = d3.time.format("%m/%d/%Y").parse;
+var parseDate = d3.timeParse("%m/%d/%Y");
+ bisectDate = d3.bisector(function(d) { return d.year; }).left;
 var parsedData = [];
 
 var yearlyData = [];
@@ -53,6 +54,8 @@ svg.append("rect")
     .attr("height", "100%")
     .attr('fill' , '#fdf498');
 
+
+
  g = svg.append("g")
         .attr("transform", "translate(" + 2*config.svgMargin.left + "," + config.svgMargin.top + ")");
        
@@ -84,13 +87,14 @@ function ProcessData(){
                             } 
                     })
                  .entries(parsedData);
-
+ debugger;
 
     yearlyData = nest.map(function(yearData) { 
+        debugger; yearData;
         return yearData.values.map(function(monthData){
             return {
                 "month" : parseInt(monthData.key),
-                "value" : monthData.values.value
+                "value" : monthData.value.value
             };
         });
     });
@@ -101,11 +105,11 @@ function ProcessData(){
 function PaintChart(){
 
 
-var xScale = d3.scale.linear() //time.scale()
+var xScale = d3.scaleLinear() //time.scale()
                 .domain(d3.extent(monthNames, function(d) { return d.n; }))
                 .range([0,width]);
 
-var yScale = d3.scale.linear()
+var yScale = d3.scaleLinear()
                .domain(d3.extent(parsedData, function(d) { return d.value; }))
                .range([ height,0]);
 
@@ -116,20 +120,19 @@ var lines  = g.selectAll("path")
                    .append("path")
                         .attr("stroke", function(d,i) { return lineColors[i]; })
                         .attr("class", "line")
-                        .attr("d", d3.svg.line()
+                        .attr("d", d3.line()
                                     .x(function(d) { return xScale(d.month); })
                                     .y(function(d) { return yScale(d.value); })
                              );
 
-var yAxis = d3.svg.axis()
-              .scale(yScale)
-              .orient("left");
+  
 
-var xAxis = d3.svg.axis()
+var yAxis = d3.axisLeft()
+              .scale(yScale);
+
+var xAxis = d3.axisBottom()
               .scale(xScale)
-              .tickFormat(function(d) {  return monthNames[d-1].name; })
-              .orient("bottom")
-              ;
+              .tickFormat(function(d) {  return monthNames[d-1].name; });
 
  g.append("g")
             .attr("class", "xaxis")
@@ -201,5 +204,52 @@ var xAxis = d3.svg.axis()
      .attr("y1", yScale(2.5))
      .attr("y2", yScale(2.5))
      .attr("class", "dashed")
+
+
+
+var focus = g.append("g")
+        .attr("class", "focus")
+        .style("display", "none");
+
+    focus.append("line")
+        .attr("class", "x-hover-line hover-line")
+        .attr("y1", 0)
+        .attr("y2", height);
+
+    focus.append("line")
+        .attr("class", "y-hover-line hover-line")
+        .attr("x1", width)
+        .attr("x2", width);
+
+    focus.append("circle")
+        .attr("r", 7.5);
+
+    focus.append("text")
+        .attr("x", 15)
+      	.attr("dy", ".31em");
+
+   
+   
+ svg.append("rect")
+        .attr("transform", "translate(" + config.svgMargin.left + "," + config.svgMargin.top + ")")
+        .attr("class", "overlay")
+        .attr("width", width)
+        .attr("height", height)
+        .on("mouseover", function() { focus.style("display", null); })
+        .on("mouseout", function() { focus.style("display", "none"); })
+        .on("mousemove", mousemove);
+
+    function mousemove() {
+        debugger;
+      var x0 = xScale.invert(d3.mouse(this)[0]),
+          i = bisectDate(parsedData, x0, 1),
+          d0 = data[i - 1],
+          d1 = data[i],
+          d = x0 - d0.year > d1.year - x0 ? d1 : d0;
+      focus.attr("transform", "translate(" + x(d.year) + "," + y(d.value) + ")");
+      focus.select("text").text(function() { return d.value; });
+      focus.select(".x-hover-line").attr("y2", height - y(d.value));
+      focus.select(".y-hover-line").attr("x2", width + width);
+    }
 
 }
