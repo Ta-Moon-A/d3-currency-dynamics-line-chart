@@ -1,8 +1,7 @@
 var parseDate = d3.timeParse("%m/%d/%Y");
- bisectDate = d3.bisector(function(d) { return d.year; }).left;
 var parsedData = [];
-
 var yearlyData = [];
+var customParsedData = [];
 
 var config  = {
       svgWidth : 800,
@@ -52,7 +51,8 @@ var svg = d3.select("body")
 svg.append("rect")
     .attr("width", "100%")
     .attr("height", "100%")
-    .attr('fill' , '#fdf498');
+    .attr('fill' , '#fdf498')
+    .attr('overflow', 'visible');
 
 
 
@@ -72,6 +72,12 @@ d3.csv("currency_data.csv")
     .get(function(error, callBackData) { 
         if(error) throw error;
         parsedData = callBackData;
+        customParsedData = callBackData.map(function(d){
+            return {
+                month : d.date.getMonth()+1,
+                value: d.value
+            }
+        });
         ProcessData();
      });
 
@@ -186,10 +192,7 @@ var xAxis = d3.axisBottom()
         .attr("x", config.svgMargin.left)  
         .attr("y", config.svgMargin.top/2 + 5);
 
-    
-    //  .selectAll("line")
-    //  .data(dashed)
-    //  .enter()
+   
      g.append("line")
      .attr("x1", 0)
      .attr("x2", width)
@@ -207,28 +210,12 @@ var xAxis = d3.axisBottom()
 
 
 
-var focus = g.append("g")
+    var focus = g.append("g")
         .attr("class", "focus")
         .style("display", "none");
 
-    focus.append("line")
-        .attr("class", "x-hover-line hover-line")
-        .attr("y1", 0)
-        .attr("y2", height);
-
-    focus.append("line")
-        .attr("class", "y-hover-line hover-line")
-        .attr("x1", width)
-        .attr("x2", width);
-
-    focus.append("circle")
-        .attr("r", 7.5);
-
-    focus.append("text")
-        .attr("x", 15)
-      	.attr("dy", ".31em");
-
-   
+    
+    
    
  svg.append("rect")
         .attr("transform", "translate(" + config.svgMargin.left + "," + config.svgMargin.top + ")")
@@ -241,15 +228,46 @@ var focus = g.append("g")
 
     function mousemove() {
         debugger;
-      var x0 = xScale.invert(d3.mouse(this)[0]),
-          i = bisectDate(parsedData, x0, 1),
-          d0 = data[i - 1],
-          d1 = data[i],
-          d = x0 - d0.year > d1.year - x0 ? d1 : d0;
-      focus.attr("transform", "translate(" + x(d.year) + "," + y(d.value) + ")");
-      focus.select("text").text(function() { return d.value; });
-      focus.select(".x-hover-line").attr("y2", height - y(d.value));
-      focus.select(".y-hover-line").attr("x2", width + width);
+        var monthNumber = Math.round(xScale.invert(d3.mouse(this)[0]));
+        var points  = [];
+        yearlyData.forEach(function(d){
+            points.push( d.find(i => i.month == monthNumber));
+        });
+      
+      var tooltipLine = focus.selectAll('.x-hover-line').data([1]);
+      var tooltipLineExit = tooltipLine.exit().remove();
+
+
+
+      tooltipLine.enter().append("line").merge(tooltipLine)
+                .attr("class", "x-hover-line hover-line")
+                .attr("y1", 0)
+                .attr("y2", height)
+                .attr("x1", xScale(monthNumber))
+                .attr("x2", xScale(monthNumber));
+
+
+       var tooltipDots = focus.selectAll('circle').data(points);
+                   
+      
+       var tooltipExitDots = tooltipDots.exit().remove();
+          
+           tooltipDots.enter()
+                      .append('circle')
+                      .merge(tooltipDots)
+                      .attr("cx", function (d) { return xScale(d.month); })
+                      .attr("cy", function (d) { return yScale(d.value); })
+                      .attr("r", 7.5)
+                      .attr("class","tooltipCircle");
+
+       
+
+     
+      // focus.select("text").text(function() { return d.value; });
+       
+      
+
+
     }
 
 }

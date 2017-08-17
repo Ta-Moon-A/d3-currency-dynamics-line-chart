@@ -55,14 +55,14 @@ body {
   pointer-events: all;
 }
 
-.focus circle {
+.tooltipCircle {
   fill: #F1F3F3;
-  stroke: #6F257F;
+  stroke: #ee4035;
   stroke-width: 5px;
 }
   
 .hover-line {
-  stroke: #6F257F;
+  stroke: #ee4035;
   stroke-width: 2px;
   stroke-dasharray: 3,3;
 }
